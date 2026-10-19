@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Sign in' if mode == 'login' else 'Create account' }}{% endblock %}
+{% block content %}
+<div style="max-width:380px;margin:10px auto">
+  <div class="card" style="border:1px solid var(--line)">
+    <h1 style="font-weight:400">{{ 'Sign in' if mode == 'login' else 'Create account' }}</h1>
+    <form method="post">
+      <input type="hidden" name="csrf" value="{{ csrf_token }}">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" required autocomplete="username" autofocus>
+      {% if mode == 'register' %}<label for="email">Email (optional)</label><input type="email" id="email" name="email" autocomplete="email">{% endif %}
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required autocomplete="{{ 'current-password' if mode == 'login' else 'new-password' }}">
+      <button class="btn block" style="margin-top:16px">{{ 'Sign in' if mode == 'login' else 'Create your ShopSecure account' }}</button>
+    </form>
+    <p class="small muted">🛡️ This sign-in is monitored: each attempt is sent through our log pipeline and scored by the threat model.</p>
+  </div>
+  {% if mode == 'login' %}
+  <div class="card small" style="background:#fffbe6;border:1px solid #f0d58a">
+    <b>Demo account:</b> username <code>demo</code>, password <code>{{ demo_password }}</code> (all services enabled, with sample activity).
+  </div>
+  <p class="small muted" style="text-align:center">New to ShopSecure?</p>
+  <a class="btn ghost block" href="{{ url_for('register') }}">Create your ShopSecure account</a>
+  {% else %}
+  <p class="small">Already have an account? <a href="{{ url_for('login') }}">Sign in ›</a></p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Security Console{% endblock %}
+{% block content %}
+<div class="card row">
+  <div><h1 style="margin-bottom:4px">🛡️ Security Console</h1>
+  <p class="muted" style="margin:0">Choose how to feed activity logs to the threat detector. You only see the results.</p></div>
+  <span class="spacer"></span>
+  <a class="btn ghost sm" href="{{ url_for('services') }}">Manage services</a>
+  <a class="btn ghost sm" href="{{ url_for('analyses') }}">Report history</a>
+  <a class="btn ghost sm" href="{{ url_for('model_card') }}">Model quality</a>
+</div>
+<h2>Three ways to send us your logs</h2>
+<div class="grid g3">
+  {% set live_on = 'live_protection' in my_services %}
+  <div class="option {{ 'locked' if not live_on }}">
+    <div class="row"><span class="n">1</span><h3 style="margin:0">Live pipeline</h3></div>
+    <p>Your logins and store activity are streamed in real time. Includes an attack simulator to test the detector.</p>
+    <p class="small muted">{{ live.n or 0 }} events processed for your account · {{ live.flagged or 0 }} flagged</p>
+    {% if live_on %}<a class="btn orange" href="{{ url_for('live_monitor') }}">Open live monitor</a>
+    {% else %}<a class="btn ghost" href="{{ url_for('services') }}">Add Live Account Protection</a>{% endif %}
+  </div>
+  {% set up_on = 'log_analyzer' in my_services %}
+  <div class="option {{ 'locked' if not up_on }}">
+    <div class="row"><span class="n">2</span><h3 style="margin:0">Upload a log file</h3></div>
+    <p>CSV, SSH / Linux auth logs, or Apache / Nginx access logs (also .gz). Get a full report with graphs.</p>
+    <p class="small muted">Up to 50,000 events per file</p>
+    {% if up_on %}<a class="btn orange" href="{{ url_for('analyze') }}#upload">Upload a file</a>
+    {% else %}<a class="btn ghost" href="{{ url_for('services') }}">Add Log File Analyzer</a>{% endif %}
+  </div>
+  {% set url_on = 'cloud_import' in my_services %}
+  <div class="option {{ 'locked' if not url_on }}">
+    <div class="row"><span class="n">3</span><h3 style="margin:0">Import from a URL</h3></div>
+    <p>Point us at a log file in cloud storage, or choose one of our curated public security datasets.</p>
+    <p class="small muted">5 ready-to-use public datasets</p>
+    {% if url_on %}<a class="btn orange" href="{{ url_for('analyze') }}#url">Import logs</a>
+    {% else %}<a class="btn ghost" href="{{ url_for('services') }}">Add Cloud Log Import</a>{% endif %}
+  </div>
+</div>
+<div class="card" style="margin-top:16px">
+  <h2>Recent reports</h2>
+  {% if recent %}
+  <div class="table-scroll"><table class="data">
+    <thead><tr><th>Report</th><th>Source</th><th class="num">Events</th><th class="num">Suspicious</th><th class="num">Malicious</th><th>Created</th></tr></thead>
+    <tbody>{% for r in recent %}<tr>
+      <td><a href="{{ url_for('analysis', aid=r.id) }}">{{ r.name }}</a></td><td>{{ 'File upload' if r.source_type == 'upload' else 'URL import' }}</td>
+      <td class="num">{{ "{:,}".format(r.n_events) }}</td><td class="num">{{ "{:,}".format(r.kpis.suspicious) }}</td><td class="num">{{ "{:,}".format(r.kpis.malicious) }}</td><td>{{ r.created_at | dt }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="muted">No reports yet - upload a file or import one of the public datasets.</p>{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% from "_macros.html" import evaluation with context %}
+{% block title %}Model quality{% endblock %}
+{% block content %}
+<div class="card"><h1 style="margin-bottom:4px">Detector quality report</h1>
+  <p class="muted" style="margin:0">Evaluated on {{ "{:,}".format(m.test_events) }} held-out events that the model never saw during training
+  (trained on {{ "{:,}".format(m.train_events) }} events, {{ m.trained_at }}).</p></div>
+{{ evaluation(m, "Validation results", "Normal = everyday shopping & logins. Suspicious = unusual but not clearly an attack (new device at night, a few failed logins, probing). Malicious = brute force, credential stuffing, vulnerability scans, request floods.") }}
+{% endblock %}

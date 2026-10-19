@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Security Services{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>ShopSecure Security Services</h1>
+  <p class="muted">Pick the services you need. They're delivered on demand from the cloud (Software-as-a-Service): add or remove them any time, and they're active instantly.</p>
+</div>
+<div class="grid g2">
+{% for key, s in SERVICES.items() %}
+  {% set on = key in my_services %}
+  <div class="service {{ 'active' if on }}">
+    <div class="row"><span class="ico">{{ s.icon }}</span><h2 style="margin:0">{{ s.name }}</h2><span class="spacer"></span>
+      <span class="badge {{ 'on' if on }}">{{ '✔ Active' if on else s.price }}</span></div>
+    <p>{{ s.tagline }}</p>
+    <p class="small muted">Data input: <b>{{ s.input }}</b></p>
+    {% if me %}
+    <form method="post" class="row">
+      <input type="hidden" name="csrf" value="{{ csrf_token }}"><input type="hidden" name="service" value="{{ key }}">
+      {% if key == 'alerts' %}
+        <input type="url" name="webhook" placeholder="Discord or Slack webhook URL (optional)" value="{{ my_services.get('alerts', {}).get('webhook', '') }}" style="flex:1;min-width:200px">
+      {% endif %}
+      {% if on %}
+        {% if key == 'alerts' %}<button class="btn sm" name="op" value="add">Save</button>{% endif %}
+        {% if s.endpoint != 'services' %}<a class="btn sm" href="{{ url_for(s.endpoint) }}">Open</a>{% endif %}
+        <button class="btn ghost sm" name="op" value="remove">Remove</button>
+      {% else %}
+        <button class="btn orange sm" name="op" value="add">Add service</button>
+      {% endif %}
+    </form>
+    {% else %}
+      <a class="btn sm" href="{{ url_for('login', next=url_for('services')) }}">Sign in to add</a>
+    {% endif %}
+  </div>
+{% endfor %}
+</div>
+{% endblock %}

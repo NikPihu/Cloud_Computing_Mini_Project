@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Analyze logs{% endblock %}
+{% block content %}
+<div class="card"><h1 style="margin-bottom:4px">Analyze a log file</h1>
+  <p class="muted" style="margin:0">We detect the format automatically, run every event through the threat model and build your report. It usually takes a few seconds.</p></div>
+<div class="grid g2" style="align-items:start">
+  <div class="card" id="upload">
+    <h2><span class="badge">Option 2</span> Upload a file</h2>
+    {% if 'log_analyzer' in subs %}
+    <form method="post" enctype="multipart/form-data" onsubmit="busy(this)">
+      <input type="hidden" name="csrf" value="{{ csrf_token }}"><input type="hidden" name="mode" value="upload">
+      <label for="file">Log file (max {{ max_mb }} MB)</label>
+      <input type="file" id="file" name="file" accept=".csv,.log,.txt,.gz" required>
+      <button class="btn orange" style="margin-top:14px">Analyze file</button>
+    </form>
+    <h3 style="margin-top:20px">Accepted formats</h3>
+    <ul class="small">
+      <li><b>CSV</b> with at least <code>timestamp, ip</code>; optional <code>user, action, success, user_agent, path, status, label</code>.
+        <a href="{{ url_for('static', filename='samples/sample_login_events.csv') }}" download>Download a sample CSV</a>.</li>
+      <li><b>SSH / Linux auth logs</b> (<code>/var/log/auth.log</code>, <code>/var/log/secure</code>).</li>
+      <li><b>Apache / Nginx access logs</b> (Common or Combined log format).</li>
+      <li>If your CSV has a <code>label</code> column (Normal / Suspicious / Malicious), the report also shows accuracy, precision and recall.</li>
+    </ul>
+    {% else %}<p>Add the <b>Log File Analyzer</b> service to upload files. <a class="btn sm" href="{{ url_for('services') }}">Add service</a></p>{% endif %}
+  </div>
+  <div class="card" id="url">
+    <h2><span class="badge">Option 3</span> Import from a URL</h2>
+    {% if 'cloud_import' in subs %}
+    <form method="post" onsubmit="busy(this)">
+      <input type="hidden" name="csrf" value="{{ csrf_token }}"><input type="hidden" name="mode" value="url">
+      <label>Choose a public security dataset</label>
+      {% for d in datasets %}
+      <label style="font-weight:400;display:flex;gap:10px;border:1px solid var(--line);border-radius:6px;padding:10px;margin:6px 0;cursor:pointer">
+        <input type="radio" name="preset" value="{{ d.url }}" {{ 'checked' if loop.first }}>
+        <span><b>{{ d.name }}</b><br><span class="small muted">{{ d.format }} · {{ d.size }} - {{ d.about }}</span></span>
+      </label>
+      {% endfor %}
+      <label for="custom">…or paste your own URL (overrides the choice above)</label>
+      <input type="url" id="custom" name="url" placeholder="https://my-bucket.s3.amazonaws.com/logs/auth.log">
+      <button class="btn orange" style="margin-top:14px">Import &amp; analyze</button>
+    </form>
+    {% else %}<p>Add the <b>Cloud Log Import</b> service to import from URLs. <a class="btn sm" href="{{ url_for('services') }}">Add service</a></p>{% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+function busy(f){ const b=f.querySelector('button'); b.disabled=true; b.textContent='Analyzing… please wait'; }
+</script>{% endblock %}

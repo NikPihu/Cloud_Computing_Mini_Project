@@ -1,0 +1,68 @@
+{% macro product_card(p) -%}
+<div class="product-card">
+  <a href="{{ url_for('product', pid=p.id) }}" class="thumb" style="background: {{ p.tone }}">{{ p.icon }}</a>
+  <a class="name" href="{{ url_for('product', pid=p.id) }}">{{ p.name }}</a>
+  <div><span class="stars">{{ stars(p.rating) }}</span> <a class="small" href="{{ url_for('product', pid=p.id) }}">{{ "{:,}".format(p.reviews) }}</a></div>
+  <div><span class="deal">{{ ((1 - p.price / p.mrp) * 100) | round | int }}% off</span> <span class="small" style="color:#cc0c39;font-weight:700">Limited time deal</span></div>
+  <div><span class="price"><sup>₹</sup>{{ "{:,}".format(p.price) }}</span> <span class="mrp">M.R.P: {{ p.mrp | inr }}</span></div>
+  <div class="small"><span class="prime">✓prime</span> FREE delivery tomorrow</div>
+  <form method="post" action="{{ url_for('cart_add', pid=p.id) }}">
+    <input type="hidden" name="csrf" value="{{ csrf_token }}"><input type="hidden" name="next" value="{{ request.full_path }}">
+    <button class="btn sm">Add to cart</button>
+  </form>
+</div>
+{%- endmacro %}
+
+{% macro stars(r) -%}{% for i in range(5) %}{{ '★' if r >= i + 0.75 else '☆' }}{% endfor %}{%- endmacro %}
+
+{% macro dashboard(prefix='d') -%}
+<div class="kpis" id="{{ prefix }}-kpis"></div>
+<div class="grid charts">
+  <div class="card"><h3>Activity verdicts</h3><p class="muted small">Share of events classified Normal, Suspicious or Malicious.</p><div class="chart-box"><canvas id="{{ prefix }}-dist" role="img" aria-label="Verdict distribution"></canvas></div></div>
+  <div class="card"><h3>Activity over time</h3><p class="muted small" id="{{ prefix }}-tl-note">Events per time bucket, stacked by verdict.</p><div class="chart-box"><canvas id="{{ prefix }}-timeline" role="img" aria-label="Events over time"></canvas></div></div>
+  <div class="card"><h3>Threat types detected</h3><p class="muted small">Why events were flagged.</p><div class="chart-box"><canvas id="{{ prefix }}-reasons" role="img" aria-label="Threat types"></canvas></div></div>
+  <div class="card"><h3>Riskiest source IPs</h3><p class="muted small">Flagged events per IP address.</p><div class="chart-box"><canvas id="{{ prefix }}-ips" role="img" aria-label="Top risky IPs"></canvas></div></div>
+  <div class="card"><h3>Risk score distribution</h3><p class="muted small">0 = safe, 100 = certain attack. Bands: &lt;40 normal, 40-69 suspicious, 70+ malicious.</p><div class="chart-box"><canvas id="{{ prefix }}-hist" role="img" aria-label="Risk score histogram"></canvas></div></div>
+</div>
+<div class="card"><h3>Latest flagged events</h3>
+  <div class="table-scroll"><table class="data"><thead><tr><th>Time</th><th>Verdict</th><th class="num">Risk</th><th>Threat</th><th>IP</th><th>User</th><th>Action</th></tr></thead>
+  <tbody id="{{ prefix }}-flagged"></tbody></table></div></div>
+{%- endmacro %}
+
+{% macro evaluation(ev, title, note) -%}
+<div class="card">
+  <h2>{{ title }}</h2>
+  <p class="muted small">{{ note }}</p>
+  <div class="kpis">
+    <div class="kpi blue"><div class="v">{{ '%.1f' % (ev.accuracy * 100) }}%</div><div class="l">Accuracy</div></div>
+    <div class="kpi blue"><div class="v">{{ '%.1f' % (ev.macro_f1 * 100) }}%</div><div class="l">Macro F1-score</div></div>
+    {% if ev.threat_detection_rate is not none %}<div class="kpi ok"><div class="v">{{ '%.1f' % (ev.threat_detection_rate * 100) }}%</div><div class="l">Threats caught (recall)</div></div>{% endif %}
+    {% if ev.false_alarm_rate is not none %}<div class="kpi warn"><div class="v">{{ '%.2f' % (ev.false_alarm_rate * 100) }}%</div><div class="l">False alarm rate</div></div>{% endif %}
+    {% if ev.roc_auc %}<div class="kpi blue"><div class="v">{{ '%.3f' % ev.roc_auc }}</div><div class="l">ROC-AUC</div></div>{% endif %}
+    <div class="kpi"><div class="v">{{ "{:,}".format(ev.samples) }}</div><div class="l">Events evaluated</div></div>
+  </div>
+  <div class="grid g2">
+    <div>
+      <h3>Per-class scores</h3>
+      <table class="data"><thead><tr><th>Class</th><th class="num">Precision</th><th class="num">Recall</th><th class="num">F1</th><th class="num">Events</th></tr></thead>
+      <tbody>{% for c, m in ev.per_class.items() %}<tr><td><span class="tag {{ c }}">{{ c }}</span></td>
+        <td class="num">{{ '%.3f' % m.precision }}</td><td class="num">{{ '%.3f' % m.recall }}</td><td class="num">{{ '%.3f' % m.f1 }}</td><td class="num">{{ "{:,}".format(m.support) }}</td></tr>{% endfor %}</tbody></table>
+      <p class="small muted">Precision: of the events we flagged as a class, how many really were. Recall: of the real events of a class, how many we caught.</p>
+    </div>
+    <div>
+      <h3>Confusion matrix</h3>
+      <table class="cm" style="border-collapse:collapse;width:100%">
+        <tr><th></th><th colspan="3">Predicted</th></tr>
+        <tr><th>Actual</th>{% for l in ev.labels %}<th>{{ l }}</th>{% endfor %}</tr>
+        {% for row in ev.confusion_matrix %}{% set tot = row | sum %}
+        <tr><th style="text-align:right">{{ ev.labels[loop.index0] }}</th>
+          {% for v in row %}{% set share = (v / tot) if tot else 0 %}
+          <td style="background: rgba(42,120,214,{{ '%.2f' % (0.06 + 0.9 * share) }}); color: {{ '#fff' if share > 0.5 else '#0f1111' }}">{{ "{:,}".format(v) }}<br><span style="font-weight:400;font-size:11px">{{ '%.1f' % (share * 100) }}%</span></td>
+          {% endfor %}</tr>
+        {% endfor %}
+      </table>
+      <p class="small muted">Rows are the true class, columns the prediction. A strong diagonal means correct verdicts.</p>
+    </div>
+  </div>
+</div>
+{%- endmacro %}

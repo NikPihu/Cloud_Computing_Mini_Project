@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% from "_macros.html" import dashboard with context %}
+{% block title %}Live monitor{% endblock %}
+{% block content %}
+<div class="card row">
+  <div><h1 style="margin-bottom:4px"><span class="pulse" id="pulse"></span> Live Account Protection</h1>
+    <p class="muted" style="margin:0">Real-time verdicts for activity on <b>{{ me.username }}</b>. Updates every 3 seconds.</p></div>
+  <span class="spacer"></span>
+  <label for="window" style="margin:0">Time window</label>
+  <select id="window" class="input" style="width:auto">
+    <option value="900">Last 15 minutes</option><option value="3600" selected>Last hour</option>
+    <option value="21600">Last 6 hours</option><option value="86400">Last 24 hours</option><option value="604800">Last 7 days</option>
+  </select>
+</div>
+<div class="card">
+  <h3>Log pipeline status</h3>
+  <div class="pipe">
+    <div class="stage">Web store &amp; simulator<b id="p-published">-</b>events sent</div><span class="arrow">→</span>
+    <div class="stage">Message queue<b id="p-queue">-</b>waiting</div><span class="arrow">→</span>
+    <div class="stage">Stream processor<b id="p-rate">-</b>events / min</div><span class="arrow">→</span>
+    <div class="stage">Threat model<b id="p-latency">-</b>ms avg latency</div><span class="arrow">→</span>
+    <div class="stage">Storage &amp; alerts<b id="p-flagged">-</b>flagged total</div>
+  </div>
+</div>
+<div class="card">
+  <h3>Attack simulator</h3>
+  <p class="muted small">Test the detector: inject a realistic attack against your account into the live pipeline, then watch the charts react.
+    You can also just sign out and type a wrong password a few times.</p>
+  <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap:10px">
+    {% for key, (name, desc) in attacks.items() %}
+    <form method="post" action="{{ url_for('simulate') }}"><input type="hidden" name="csrf" value="{{ csrf_token }}"><input type="hidden" name="kind" value="{{ key }}">
+      <button class="btn ghost sim-btn"><b>⚡ {{ name }}</b><span>{{ desc }}</span></button></form>
+    {% endfor %}
+  </div>
+</div>
+{{ dashboard('d') }}
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+const dash = new Dashboard('d');
+const sel = document.getElementById('window');
+try { const w = localStorage.getItem('live-window'); if (w) sel.value = w; } catch (e) {}
+sel.addEventListener('change', () => { try { localStorage.setItem('live-window', sel.value); } catch (e) {} refresh(); });
+async function refresh() {
+  try {
+    const r = await fetch('{{ url_for("api_live_summary") }}?window=' + sel.value, {credentials: 'same-origin'});
+    if (!r.ok) throw new Error(r.status);
+    const s = await r.json();
+    dash.render(s);
+    const p = s.pipeline, n = v => Number(v).toLocaleString();
+    document.getElementById('p-published').textContent = n(p.published);
+    document.getElementById('p-queue').textContent = n(p.queue_depth);
+    document.getElementById('p-rate').textContent = n(p.events_per_min);
+    document.getElementById('p-latency').textContent = p.avg_latency_ms.toFixed(1);
+    document.getElementById('p-flagged').textContent = n(p.flagged);
+    document.getElementById('pulse').style.background = p.worker_alive ? '' : 'var(--bad)';
+  } catch (e) { document.getElementById('pulse').style.background = 'var(--bad)'; }
+}
+refresh(); setInterval(refresh, 3000);
+</script>
+{% endblock %}

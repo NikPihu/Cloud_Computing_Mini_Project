@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% from "_macros.html" import product_card, stars with context %}
+{% block title %}{{ p.name }}{% endblock %}
+{% block content %}
+<div class="card"><div class="pd">
+  <div class="thumb" style="background: {{ p.tone }}">{{ p.icon }}</div>
+  <div>
+    <a class="small" href="{{ url_for('index', category=p.category) }}">Visit the {{ p.category }} store</a>
+    <h1 style="font-weight:400">{{ p.name }}</h1>
+    <div><b>{{ p.rating }}</b> <span class="stars">{{ stars(p.rating) }}</span> <span class="small">{{ "{:,}".format(p.reviews) }} ratings</span></div>
+    <hr style="border:0;border-top:1px solid var(--line)">
+    <div><span style="color:#cc0c39;font-size:24px">-{{ ((1 - p.price / p.mrp) * 100) | round | int }}%</span>
+      <span class="price" style="font-size:28px"><sup>₹</sup>{{ "{:,}".format(p.price) }}</span></div>
+    <div class="mrp">M.R.P.: {{ p.mrp | inr }}</div>
+    <p class="small">Inclusive of all taxes · <span class="prime">✓prime</span></p>
+    <h3>About this item</h3>
+    <ul>
+      <li>Top-rated {{ p.category | lower }} pick with {{ "{:,}".format(p.reviews) }} verified reviews.</li>
+      <li>Free delivery and 10-day replacement.</li>
+      <li>Your purchase is protected by ShopSecure real-time fraud and login monitoring.</li>
+    </ul>
+  </div>
+  <div class="buybox">
+    <div class="price"><sup>₹</sup>{{ "{:,}".format(p.price) }}</div>
+    <p class="small">FREE delivery <b>tomorrow</b>. <span style="color:#067d06;font-size:16px">In stock</span></p>
+    <form method="post" action="{{ url_for('cart_add', pid=p.id) }}">
+      <input type="hidden" name="csrf" value="{{ csrf_token }}">
+      <button class="btn block">Add to Cart</button>
+    </form>
+    <form method="post" action="{{ url_for('cart_add', pid=p.id) }}" style="margin-top:8px">
+      <input type="hidden" name="csrf" value="{{ csrf_token }}"><input type="hidden" name="next" value="{{ url_for('cart') }}">
+      <button class="btn orange block">Buy Now</button>
+    </form>
+    <p class="small muted">🔒 Secure transaction</p>
+  </div>
+</div></div>
+{% if related %}<h2>Related products</h2><div class="grid g4">{% for r in related %}{{ product_card(r) }}{% endfor %}</div>{% endif %}
+{% endblock %}

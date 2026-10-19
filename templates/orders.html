@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Your Orders{% endblock %}
+{% block content %}
+<h1 style="font-weight:400">Your Orders</h1>
+{% for o in orders %}
+<div class="card">
+  <div class="row small muted"><span>ORDER PLACED<br><b style="color:var(--ink)">{{ o.created_at | dt }}</b></span>
+    <span>TOTAL<br><b style="color:var(--ink)">{{ o.total | inr }}</b></span><span class="spacer"></span><span>ORDER # SS-{{ 10000 + o.id }}</span></div>
+  <hr style="border:0;border-top:1px solid var(--line)">
+  {% for i in o['items'] %}<div>{{ i.qty }} × <a href="{{ url_for('product', pid=i.id) }}">{{ i.name }}</a> - {{ i.price | inr }}</div>{% endfor %}
+  <p style="color:#067d06;font-weight:700;margin-bottom:0">Arriving tomorrow</p>
+</div>
+{% else %}
+<div class="card">You haven't placed any orders yet. <a href="{{ url_for('index') }}">Start shopping</a>.</div>
+{% endfor %}
+{% endblock %}
