@@ -5,4 +5,4 @@
 
 The cloud app imports `nids.detector.Detector` and calls `Detector.predict()`. To pick up model
 changes from the AIML repo, re-copy those folders (see `scripts` in the README) and rebuild the image.
-The NSL-KDD train/test files are downloaded automatically during `docker build`.
+The NSL-KDD train/test files are bundled in `data/raw/` (same files as the AIML repo), so builds need no internet download.

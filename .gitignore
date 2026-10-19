@@ -7,5 +7,4 @@ instance/
 .pytest_cache/
 aiml/models/*
 !aiml/models/.gitkeep
-aiml/data/raw/
 aiml/data/uploads/

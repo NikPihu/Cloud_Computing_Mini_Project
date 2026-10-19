@@ -3,10 +3,8 @@
 **/*.pyc
 instance
 aiml/models/*
-aiml/data/raw
 tests
 docs
 deploy
-streamer
 agent
 .env

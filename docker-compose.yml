@@ -22,7 +22,9 @@ services:
 
   # Simulated company network sensor: delivers NSL-KDD connection records one by one
   log-streamer:
-    build: ./streamer
+    build:
+      context: .
+      dockerfile: streamer/Dockerfile
     image: netguard-log-streamer
     expose:
       - "9000"

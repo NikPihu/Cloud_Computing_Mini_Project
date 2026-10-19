@@ -1,0 +1,6 @@
+# Keep Linux line endings for scripts and data even when cloned on Windows
+*.sh text eol=lf
+*.py text eol=lf
+*.txt text eol=lf
+*.csv text eol=lf
+Dockerfile text eol=lf

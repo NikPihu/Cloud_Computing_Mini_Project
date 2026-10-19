@@ -5,11 +5,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PORT=8000 DATABASE_PATH=/data/n
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --retries 10 --timeout 60 -r requirements.txt
 
 COPY aiml/ aiml/
 COPY web/ web/
-# Download NSL-KDD and train the AIML detectors at build time (~30 s), so containers start instantly
+# Train the AIML detectors on the bundled NSL-KDD files at build time (~30 s), so containers start instantly
 RUN cd web && python -m engine > /dev/null
 
 WORKDIR /app/web
