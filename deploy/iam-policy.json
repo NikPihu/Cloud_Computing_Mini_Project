@@ -1,0 +1,19 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ContainerLogsToCloudWatch",
+      "Effect": "Allow",
+      "Action": ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents", "logs:DescribeLogStreams",
+                 "logs:PutRetentionPolicy"],
+      "Resource": "arn:aws:logs:*:*:log-group:/netguard/*"
+    },
+    {
+      "Sid": "AppMetricsToCloudWatch",
+      "Effect": "Allow",
+      "Action": "cloudwatch:PutMetricData",
+      "Resource": "*",
+      "Condition": {"StringEquals": {"cloudwatch:namespace": "NetGuard"}}
+    }
+  ]
+}

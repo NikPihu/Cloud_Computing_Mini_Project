@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Upload logs{% endblock %}
+{% block content %}
+<div class="card"><h1 style="margin-bottom:4px">Upload network logs</h1>
+  <p class="muted" style="margin:0">Your active services ({% for k in my_services %}{{ SERVICES[k].name }}{{ ', ' if not loop.last }}{% endfor %}) run on every connection in the file.</p></div>
+<div class="grid g2" style="align-items:start">
+  <div class="card">
+    <h2>Your file</h2>
+    <form method="post" enctype="multipart/form-data" onsubmit="busy(this)">
+      <input type="hidden" name="csrf" value="{{ csrf_token }}">
+      <label for="file">Log file (max {{ max_mb }} MB, up to 100,000 connections)</label>
+      <input type="file" id="file" name="file" accept=".csv,.txt,.log" required>
+      <button class="btn orange" style="margin-top:14px">Analyse file</button>
+    </form>
+    <h3 style="margin-top:20px">Accepted format</h3>
+    <ul class="small">
+      <li>One network connection per row with the 41 NSL-KDD / KDD-99 features (<code>duration, protocol_type, service, flag, src_bytes, dst_bytes, …</code>).</li>
+      <li>With a header row (CSV) or without (raw <code>KDDTrain+.txt</code> / <code>KDDTest+.txt</code> style).</li>
+      <li>An optional <code>label</code> column (<code>normal</code>, <code>neptune</code>, <code>smurf</code>, …) turns on accuracy, precision, recall and confusion matrices.</li>
+      <li>Optional <code>src_ip</code> column for the source-IP chart.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h2>No file handy? Use a sample</h2>
+    {% for key, (name, path) in samples.items() %}
+    <form method="post" onsubmit="busy(this)" style="margin-bottom:10px"><input type="hidden" name="csrf" value="{{ csrf_token }}"><input type="hidden" name="sample" value="{{ key }}">
+      <button class="btn ghost block" style="text-align:left">📄 {{ name }}</button></form>
+    {% endfor %}
+    <p class="small muted">The NSL-KDD test set contains 17 attack types that never appear in the training data, a realistic test of how the services handle new attacks.</p>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script>function busy(f){const b=f.querySelector('button');b.disabled=true;b.textContent='Analysing… please wait';}</script>{% endblock %}

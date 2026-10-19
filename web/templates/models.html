@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% from "_macros.html" import evaluation_block, chart_scripts %}
+{% block title %}Model evaluation{% endblock %}
+{% block content %}
+<div class="card"><h1 style="margin-bottom:4px">Model evaluation</h1>
+  <p class="muted" style="margin:0">The services use the AIML mini project models, trained on {{ card.train_rows | num }} NSL-KDD connections
+  and tested on the official KDDTest+ set ({{ card.test_rows | num }} connections, {{ card.evaluation.unseen_attacks | num }} of them from attack types never seen in training).
+  Trained {{ card.trained_at }} in {{ card.train_seconds }} s with scikit-learn {{ card.versions['scikit-learn'] }}.</p></div>
+<div class="grid g3">
+  {% for key, s in SERVICES.items() %}{% set m = model_metric(key) %}
+  <div class="card"><h3>{{ s.icon }} {{ s.name }}</h3><p class="small muted">{{ s.model }}</p><div class="kpi blue"><div class="v">{{ m[1] | pct }}</div><div class="l">{{ m[0] }}</div></div></div>
+  {% endfor %}
+</div>
+{{ evaluation_block('e') }}
+<div class="card"><h2>Key finding</h2>
+  <p>Supervised models score about 99% in cross-validation, but the test set contains attack types that never appear in training, and the classifier misses most of them.
+  The Isolation Forest only learned what <i>normal</i> traffic looks like, so it catches about twice as many unseen attacks. Combining both gives the best overall detection.
+  That's why NetGuard combines the services into one verdict.</p></div>
+{% endblock %}
+{% block scripts %}{{ chart_scripts() }}<script>renderEvaluation('e', {{ card.evaluation | tojson }}, 'Official NSL-KDD test set, all three services enabled.');</script>{% endblock %}

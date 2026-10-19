@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Monitoring{% endblock %}
+{% block content %}
+<div class="card row">
+  <div><h1 style="margin-bottom:4px">☁️ Cloud monitoring</h1>
+  <p class="muted" style="margin:0">Application logs go to <b>Amazon CloudWatch Logs</b> and metrics to <b>CloudWatch Metrics</b> (namespace <code>{{ namespace }}</code>{% if region %}, region <code>{{ region }}</code>{% endif %}).</p></div>
+</div>
+<div class="grid g2" style="align-items:start">
+  <div class="card">
+    <h2>CloudWatch connection</h2>
+    {% if cw.enabled %}
+      <p><span class="status active">publishing</span> Metrics are sent every minute.
+      {% if cw.last_flush %}Last sent {{ cw.last_flush | dt }} ({{ cw.sent | num }} data points so far).{% endif %}</p>
+      {% if cw.last_error %}<p class="small" style="color:var(--bad)">Last error: {{ cw.last_error }}</p>{% endif %}
+    {% else %}
+      <p><span class="status paused">not publishing</span> {{ cw.last_error }}</p>
+    {% endif %}
+    {% if links %}
+    <div class="row">
+      <a class="btn orange sm" href="{{ links.dashboard }}" target="_blank" rel="noopener">Open CloudWatch dashboard</a>
+      <a class="btn ghost sm" href="{{ links.metrics }}" target="_blank" rel="noopener">Metrics</a>
+      <a class="btn ghost sm" href="{{ links.logs }}" target="_blank" rel="noopener">Logs</a>
+      <a class="btn ghost sm" href="{{ links.insights }}" target="_blank" rel="noopener">Logs Insights</a>
+      <a class="btn ghost sm" href="{{ links.alarms }}" target="_blank" rel="noopener">Alarms</a>
+    </div>{% endif %}
+  </div>
+  <div class="card">
+    <h2>Pipeline health</h2>
+    <table class="data"><tbody>
+      <tr><td>Uptime</td><td class="num">{{ health.uptime_s | num }} s</td></tr>
+      <tr><td>Connected feeds</td><td class="num">{{ health.active_feeds }}</td></tr>
+      <tr><td>Records received / processed</td><td class="num">{{ health.received | num }} / {{ health.processed | num }}</td></tr>
+      <tr><td>Flagged</td><td class="num">{{ health.flagged | num }}</td></tr>
+      <tr><td>Queue depth</td><td class="num">{{ health.queue_depth | num }}</td></tr>
+      <tr><td>Average latency</td><td class="num">{{ health.avg_latency_ms }} ms</td></tr>
+      <tr><td>Dropped</td><td class="num">{{ health.dropped | num }}</td></tr>
+    </tbody></table>
+  </div>
+</div>
+<div class="card">
+  <h2>Metrics sent to CloudWatch (since this server started)</h2>
+  <div class="kpis">{% for name, v in totals | dictsort %}<div class="kpi blue"><div class="v">{{ v | int | num }}</div><div class="l">{{ name }}</div></div>{% else %}<p class="muted">No metrics yet.</p>{% endfor %}</div>
+  <p class="small muted">Plus timings (ProcessingLatency, ResponseTime, BatchJobDuration) and gauges (QueueDepth, ActiveStreams).</p>
+</div>
+<div class="card">
+  <h2>Useful CloudWatch Logs Insights queries</h2>
+<code class="block"># every attack detected, newest first
+fields @timestamp, verdict, attack_type, src_ip, service, confidence
+| filter event = "detection" and verdict = "Attack" | sort @timestamp desc
+
+# attacks per type, 5-minute buckets
+filter event = "detection" | stats count(*) by attack_type, bin(5m)
+
+# failed sign-ins by IP (brute force against the website itself)
+filter event = "login_failed" | stats count(*) as attempts by ip | sort attempts desc</code>
+</div>
+{% endblock %}

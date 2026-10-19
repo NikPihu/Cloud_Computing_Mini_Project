@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Services{% endblock %}
+{% block content %}
+<div class="card">
+  <h1 style="margin-bottom:4px">Detection services</h1>
+  <p class="muted" style="margin:0">Add the services you need. They switch on instantly and apply to every log you send, uploaded or streamed.
+  When several are on, results are combined into one verdict: <span class="tag Normal">Normal</span> <span class="tag Suspicious">Suspicious</span> <span class="tag Attack">Attack</span></p>
+</div>
+<div class="svc-grid">
+{% for key, s in SERVICES.items() %}{% set on = key in my_services %}{% set m = model_metric(key) %}
+  <div class="svc-box {{ 'active' if on }}">
+    <div class="row"><span class="ico">{{ s.icon }}</span><span class="spacer"></span><span class="badge {{ 'on' if on }}">{{ '✔ Active' if on else 'Free' }}</span></div>
+    <h2 style="margin:0">{{ s.name }}</h2>
+    <p style="margin:0">{{ s.desc }}</p>
+    <p class="small muted" style="margin:0">Model: {{ s.model }}</p>
+    <div class="stat"><b>{{ m[1] | pct }}</b> {{ m[0] | lower }} (NSL-KDD test set)</div>
+    {% if me %}
+    <form method="post" class="row"><input type="hidden" name="csrf" value="{{ csrf_token }}"><input type="hidden" name="service" value="{{ key }}">
+      {% if on %}<a class="btn sm" href="{{ url_for('console') }}">Open console</a><button class="btn ghost sm" name="op" value="remove">Remove</button>
+      {% else %}<button class="btn orange" name="op" value="add">Add to my account</button>{% endif %}
+    </form>
+    {% else %}<a class="btn orange" href="{{ url_for('login', next=url_for('services')) }}">Sign in to add</a>{% endif %}
+  </div>
+{% endfor %}
+</div>
+{% endblock %}

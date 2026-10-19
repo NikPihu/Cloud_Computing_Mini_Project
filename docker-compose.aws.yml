@@ -1,0 +1,30 @@
+# CloudWatch override for EC2. Requires: an IAM instance role (deploy/iam-policy.json),
+# AWS_REGION in .env, and instance metadata hop limit 2 (see docs/EC2_DEPLOY.md).
+#   docker compose -f docker-compose.yml -f docker-compose.aws.yml up -d --build
+services:
+  web:
+    environment:
+      AWS_REGION: ${AWS_REGION:?set AWS_REGION in .env}
+      CW_METRICS: "on"
+      CW_NAMESPACE: ${CW_NAMESPACE:-NetGuard}
+      CW_LOG_GROUP: /netguard/web
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ${AWS_REGION}
+        awslogs-group: /netguard/web
+        awslogs-stream: web
+        awslogs-create-group: "true"
+        mode: non-blocking
+        max-buffer-size: 4m
+
+  log-streamer:
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ${AWS_REGION}
+        awslogs-group: /netguard/log-streamer
+        awslogs-stream: log-streamer
+        awslogs-create-group: "true"
+        mode: non-blocking
+        max-buffer-size: 4m

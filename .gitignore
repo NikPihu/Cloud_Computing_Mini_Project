@@ -3,9 +3,9 @@ __pycache__/
 .venv/
 venv/
 instance/
-model_store/
-logs/
-uploads/
-*.db
 .env
 .pytest_cache/
+aiml/models/*
+!aiml/models/.gitkeep
+aiml/data/raw/
+aiml/data/uploads/

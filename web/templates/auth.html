@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Sign in' if mode == 'login' else 'Create account' }}{% endblock %}
+{% block content %}
+<div style="max-width:400px;margin:10px auto">
+  <div class="card" style="border:1px solid var(--line)">
+    <h1 style="font-weight:400">{{ 'Sign in' if mode == 'login' else 'Create account' }}</h1>
+    <form method="post">
+      <input type="hidden" name="csrf" value="{{ csrf_token }}">
+      {% if mode == 'register' %}
+      <label for="full_name">Your name</label><input type="text" id="full_name" name="full_name" autocomplete="name">
+      <label for="company">Company / organisation</label><input type="text" id="company" name="company" autocomplete="organization">
+      <label for="email">Email</label><input type="email" id="email" name="email" autocomplete="email">
+      {% endif %}
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" required autocomplete="username" {{ 'autofocus' if mode == 'login' }}>
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required autocomplete="{{ 'current-password' if mode == 'login' else 'new-password' }}">
+      {% if mode == 'register' %}<label for="confirm">Confirm password</label><input type="password" id="confirm" name="confirm" required autocomplete="new-password">{% endif %}
+      <button class="btn block" style="margin-top:16px">{{ 'Sign in' if mode == 'login' else 'Create your NetGuard account' }}</button>
+    </form>
+  </div>
+  {% if mode == 'login' %}
+  <div class="card small" style="background:#fffbe6;border:1px solid #f0d58a">
+    <b>Demo account:</b> username <code>demo</code>, password <code>{{ demo_password }}</code>. All services are on and a live network sensor is already connected.
+  </div>
+  <a class="btn ghost block" href="{{ url_for('register') }}">Create your NetGuard account</a>
+  {% else %}
+  <p class="small">Already have an account? <a href="{{ url_for('login') }}">Sign in ›</a></p>
+  {% endif %}
+</div>
+{% endblock %}

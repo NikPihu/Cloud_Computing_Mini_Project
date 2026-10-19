@@ -1,6 +1,11 @@
+# web app
 Flask>=3.0,<4
 gunicorn>=22.0
-scikit-learn>=1.5
-numpy>=1.26
-joblib>=1.3
 requests>=2.31
+boto3>=1.34
+# AIML engine (aiml/nids)
+numpy>=1.26
+pandas>=2.2
+scikit-learn>=1.5
+pyyaml>=6.0
+joblib>=1.3

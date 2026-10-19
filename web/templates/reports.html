@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="row"><h1 style="margin:0">Reports</h1><span class="spacer"></span><a class="btn sm" href="{{ url_for('upload') }}">New analysis</a></div>
+  {% if rows %}
+  <div class="table-scroll" style="max-height:none;margin-top:12px"><table class="data">
+    <thead><tr><th>File</th><th class="num">Connections</th><th class="num">Attacks</th><th class="num">Suspicious</th><th class="num">Threat %</th><th>Created</th><th></th></tr></thead>
+    <tbody>{% for r in rows %}<tr><td><a href="{{ url_for('report', aid=r.id) }}">{{ r.name }}</a></td><td class="num">{{ r.n_records | num }}</td>
+      <td class="num">{{ r.kpis.attack | num }}</td><td class="num">{{ r.kpis.suspicious | num }}</td><td class="num">{{ r.kpis.threat_pct }}%</td>
+      <td>{{ r.created_at | dt }}</td><td><a href="{{ url_for('export_report', aid=r.id) }}">CSV</a></td></tr>{% endfor %}</tbody></table></div>
+  {% else %}<p class="muted">No reports yet. <a href="{{ url_for('upload') }}">Upload a log file</a>.</p>{% endif %}
+</div>
+{% endblock %}

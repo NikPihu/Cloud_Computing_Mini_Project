@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}My console{% endblock %}
+{% block content %}
+<div class="card row">
+  <div><h1 style="margin-bottom:4px">Welcome back, {{ me.full_name or me.username }}</h1>
+    <p class="muted" style="margin:0">{{ me.company or 'Your organisation' }} · {{ my_services | length }} of {{ SERVICES | length }} services active</p></div>
+  <span class="spacer"></span><a class="btn ghost sm" href="{{ url_for('services') }}">Manage services</a>
+</div>
+<div class="kpis">
+  <div class="kpi blue"><div class="v">{{ (totals.n or 0) | num }}</div><div class="l">Connections analysed</div></div>
+  <div class="kpi bad"><div class="v">{{ (totals.attacks or 0) | num }}</div><div class="l">Attacks</div></div>
+  <div class="kpi warn"><div class="v">{{ (totals.susp or 0) | num }}</div><div class="l">Suspicious</div></div>
+  <div class="kpi"><div class="v">{{ sources | length }}</div><div class="l">Log feeds</div></div>
+</div>
+{% if not my_services %}<div class="flash info">You have no services yet. <a href="{{ url_for('services') }}">Add Network Intrusion Detection or Anomaly Detection</a> to start.</div>{% endif %}
+<h2>Send us your network logs</h2>
+<div class="grid g2">
+  <div class="option"><div class="row"><span class="n">1</span><h3 style="margin:0">Upload a log file</h3></div>
+    <p>Upload your network connection logs (NSL-KDD / KDD-99 format, CSV or TXT). You get a full report with graphs and, if the file has labels, accuracy.</p>
+    <a class="btn orange" href="{{ url_for('upload') }}">Upload logs</a></div>
+  <div class="option"><div class="row"><span class="n">2</span><h3 style="margin:0">Connect a live feed</h3></div>
+    <p>Connect a network sensor or log shipper that delivers records one by one. Each is checked the moment it arrives.</p>
+    <div class="row"><a class="btn orange" href="{{ url_for('sources') }}">Connect a feed</a><a class="btn ghost" href="{{ url_for('live') }}">Live dashboard</a></div></div>
+</div>
+<div class="grid g2" style="margin-top:16px">
+  <div class="card"><h2>Live feeds</h2>
+    {% for s in sources %}<div class="row" style="border-top:1px solid #eee;padding:8px 0"><span class="status {{ s.status }}">{{ s.status }}</span><b>{{ s.name }}</b><span class="spacer"></span><span class="small muted">{{ s.records | num }} records</span></div>
+    {% else %}<p class="muted">No feeds yet.</p>{% endfor %}</div>
+  <div class="card"><h2>Recent reports</h2>
+    {% for r in reports %}<div class="row" style="border-top:1px solid #eee;padding:8px 0"><a href="{{ url_for('report', aid=r.id) }}">{{ r.name }}</a><span class="spacer"></span><span class="small muted">{{ r.n_records | num }} records · {{ r.kpis.threat_pct }}% threats</span></div>
+    {% else %}<p class="muted">No reports yet.</p>{% endfor %}</div>
+</div>
+{% endblock %}

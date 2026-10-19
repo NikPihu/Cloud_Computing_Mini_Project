@@ -1,0 +1,102 @@
+# ---------------------------------------------------------------------------
+#  Dataset + experiment settings for the NSL-KDD intrusion detection dataset.
+#
+#  EVERYTHING that is specific to one dataset lives in this file - the Python
+#  code never hard-codes a column name. To use a different dataset:
+#    1. copy this file (e.g. config/my_dataset.yaml)
+#    2. change the `dataset:` section (paths, label column, normal value)
+#    3. pick it in the GUI sidebar, or set NIDS_CONFIG=config/my_dataset.yaml
+#  For a CSV that already has a header row you only need: name, train_path,
+#  has_header: true, label_column and normal_value.
+# ---------------------------------------------------------------------------
+
+dataset:
+  name: NSL-KDD
+  description: >
+    Improved version of the KDD Cup 99 network intrusion dataset (University of
+    New Brunswick). Each row is one network connection described by 41 features.
+    The test file contains 17 attack types that never appear in the training file.
+
+  train_path: data/raw/KDDTrain+.txt
+  test_path: data/raw/KDDTest+.txt         # optional - if absent, train is split 80/20
+
+  download:                                # used only if the files above are missing
+    train: https://raw.githubusercontent.com/defcom17/NSL_KDD/master/KDDTrain%2B.txt
+    test: https://raw.githubusercontent.com/defcom17/NSL_KDD/master/KDDTest%2B.txt
+
+  has_header: false                        # the raw files have no header row ...
+  columns:                                 # ... so we name the 43 columns here
+    - duration
+    - protocol_type
+    - service
+    - flag
+    - src_bytes
+    - dst_bytes
+    - land
+    - wrong_fragment
+    - urgent
+    - hot
+    - num_failed_logins
+    - logged_in
+    - num_compromised
+    - root_shell
+    - su_attempted
+    - num_root
+    - num_file_creations
+    - num_shells
+    - num_access_files
+    - num_outbound_cmds
+    - is_host_login
+    - is_guest_login
+    - count
+    - srv_count
+    - serror_rate
+    - srv_serror_rate
+    - rerror_rate
+    - srv_rerror_rate
+    - same_srv_rate
+    - diff_srv_rate
+    - srv_diff_host_rate
+    - dst_host_count
+    - dst_host_srv_count
+    - dst_host_same_srv_rate
+    - dst_host_diff_srv_rate
+    - dst_host_same_src_port_rate
+    - dst_host_srv_diff_host_rate
+    - dst_host_serror_rate
+    - dst_host_srv_serror_rate
+    - dst_host_rerror_rate
+    - dst_host_srv_rerror_rate
+    - label
+    - difficulty
+
+  label_column: label
+  normal_value: normal                     # every other label value is an attack
+  drop_columns: [difficulty]               # not a traffic feature (dataset metadata)
+  categorical_columns: auto                # auto = every text column
+
+  # Used when training.target = category. Attacks not listed become "Other".
+  attack_categories:
+    DoS: [back, land, neptune, pod, smurf, teardrop, apache2, mailbomb,
+          processtable, udpstorm]
+    Probe: [ipsweep, nmap, portsweep, satan, mscan, saint]
+    R2L: [ftp_write, guess_passwd, imap, multihop, phf, spy, warezclient,
+          warezmaster, xlock, xsnoop, snmpguess, snmpgetattack, httptunnel,
+          sendmail, named, worm]
+    U2R: [buffer_overflow, loadmodule, perl, rootkit, ps, sqlattack, xterm]
+
+training:
+  target: binary                           # binary (normal/attack) or category
+  test_size: 0.2                           # only used when there is no test_path
+  sample_fraction: 1.0                     # < 1.0 trains on a random subset (faster)
+  random_state: 42
+  models: [Logistic Regression, Naive Bayes, Decision Tree, Random Forest]
+  cv_folds: 3
+  tuning_sample_size: 20000                # rows used by GridSearchCV
+
+anomaly:
+  n_estimators: 200
+  false_alarm_rate: 0.05                   # share of normal traffic we accept to flag
+
+ui:
+  live_input_features: auto                # auto = 10 most important features

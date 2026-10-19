@@ -1,0 +1,35 @@
+{% macro dashboard(p='d') -%}
+<div class="kpis" id="{{ p }}-kpis"></div>
+<div class="grid charts">
+  <div class="card"><h3>Verdicts</h3><p class="muted small">Share of connections judged Normal, Suspicious or Attack.</p><div class="chart-box"><canvas id="{{ p }}-dist" role="img" aria-label="Verdict distribution"></canvas></div></div>
+  <div class="card"><h3>Traffic analysed</h3><p class="muted small" id="{{ p }}-tl-note">Connections per interval, by verdict.</p><div class="chart-box"><canvas id="{{ p }}-timeline" role="img" aria-label="Traffic over time"></canvas></div></div>
+  <div class="card"><h3>Attack types</h3><p class="muted small" id="{{ p }}-fam-note">DoS, Probe, R2L and U2R attacks found.</p><div class="chart-box"><canvas id="{{ p }}-families" role="img" aria-label="Attack types"></canvas></div></div>
+  <div class="card"><h3>Most targeted network services</h3><p class="muted small">Flagged connections per network service (http, ftp, private, ...).</p><div class="chart-box"><canvas id="{{ p }}-services" role="img" aria-label="Targeted services"></canvas></div></div>
+  <div class="card"><h3>Protocols</h3><p class="muted small">Connections per protocol, by verdict.</p><div class="chart-box"><canvas id="{{ p }}-protocols" role="img" aria-label="Protocols"></canvas></div></div>
+  <div class="card"><h3 id="{{ p }}-third-title">Anomaly scores</h3><p class="muted small" id="{{ p }}-hist-note">How unusual each connection looks. Bars right of the threshold are flagged.</p><div class="chart-box"><canvas id="{{ p }}-hist" role="img" aria-label="Anomaly score histogram"></canvas></div></div>
+</div>
+<div class="card" id="{{ p }}-sources-card" style="display:none"><h3>Top suspicious source IPs</h3><div class="chart-box"><canvas id="{{ p }}-sources" role="img" aria-label="Top source IPs"></canvas></div></div>
+<div class="card"><h3>Latest flagged connections</h3>
+  <div class="table-scroll"><table class="data"><thead><tr><th>Time</th><th>Verdict</th><th>Attack type</th><th class="num">Confidence</th><th class="num">Anomaly score</th><th>Source IP</th><th>Protocol / service</th><th>Flag</th><th>Actual label</th></tr></thead>
+  <tbody id="{{ p }}-flagged"></tbody></table></div></div>
+{%- endmacro %}
+
+{% macro evaluation_block(p='e') -%}
+<div id="{{ p }}-eval" class="card" style="display:none">
+  <h2>Evaluation against the true labels</h2>
+  <p class="muted small" id="{{ p }}-eval-note"></p>
+  <div class="kpis" id="{{ p }}-eval-kpis"></div>
+  <div class="grid g2">
+    <div><h3>Approaches compared</h3><div class="table-scroll" style="max-height:none"><table class="data" id="{{ p }}-eval-table"></table></div>
+      <p class="small muted">Recall = share of attacks detected. "Unseen" = attack types that were not in the training data.</p></div>
+    <div><h3>Detection rate by approach</h3><div class="chart-box"><canvas id="{{ p }}-eval-chart" role="img" aria-label="Detection by approach"></canvas></div></div>
+    <div><h3>Confusion matrix (combined verdict)</h3><div id="{{ p }}-eval-cm"></div></div>
+    <div id="{{ p }}-fam-wrap" style="display:none"><h3>Attack type confusion matrix</h3><p class="small muted" id="{{ p }}-fam-acc"></p><div id="{{ p }}-fam-cm"></div></div>
+  </div>
+</div>
+{%- endmacro %}
+
+{% macro chart_scripts() -%}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{%- endmacro %}

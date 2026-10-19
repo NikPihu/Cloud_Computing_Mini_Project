@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% from "_macros.html" import dashboard, evaluation_block, chart_scripts %}
+{% block title %}Live dashboard{% endblock %}
+{% block content %}
+<div class="card row">
+  <div><h1 style="margin-bottom:4px"><span class="pulse" id="pulse"></span> Live network monitor</h1>
+    <p class="muted" style="margin:0">Connections from your live feeds, analysed as they arrive. Refreshes every 3 seconds.</p></div>
+  <span class="spacer"></span>
+  <select id="source" class="input" style="width:auto" aria-label="Feed"><option value="">All feeds</option>{% for s in sources %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}</select>
+  <select id="window" class="input" style="width:auto" aria-label="Time window">
+    <option value="300">Last 5 minutes</option><option value="900" selected>Last 15 minutes</option><option value="3600">Last hour</option><option value="21600">Last 6 hours</option><option value="86400">Last 24 hours</option></select>
+</div>
+{% if not sources %}<div class="flash info">No live feeds yet. <a href="{{ url_for('sources') }}">Connect the network sensor</a> to start streaming.</div>{% endif %}
+<div class="card">
+  <h3>Processing pipeline</h3>
+  <div class="pipe">
+    <div class="stage">Log feeds<b id="p-feeds">-</b>connected</div><span class="arrow">→</span>
+    <div class="stage">Records received<b id="p-received">-</b>total</div><span class="arrow">→</span>
+    <div class="stage">Queue<b id="p-queue">-</b>waiting</div><span class="arrow">→</span>
+    <div class="stage">ML analysis<b id="p-latency">-</b>ms latency</div><span class="arrow">→</span>
+    <div class="stage">Storage + CloudWatch<b id="p-flagged">-</b>flagged</div>
+  </div>
+</div>
+{{ dashboard('d') }}
+{{ evaluation_block('e') }}
+{% endblock %}
+{% block scripts %}{{ chart_scripts() }}
+<script>
+const dash = new Dashboard('d');
+const win = document.getElementById('window'), src = document.getElementById('source');
+[win, src].forEach(el => el.addEventListener('change', refresh));
+async function refresh() {
+  try {
+    const r = await fetch('{{ url_for("api_live") }}?window=' + win.value + '&source=' + src.value, {credentials: 'same-origin'});
+    if (!r.ok) throw new Error(r.status);
+    const s = await r.json(), p = s.pipeline, n = v => Number(v).toLocaleString();
+    dash.render(s);
+    renderEvaluation('e', s.evaluation, 'The network sensor replays labelled NSL-KDD traffic, so we can score the live verdicts against the truth.');
+    document.getElementById('p-feeds').textContent = n(p.active_feeds);
+    document.getElementById('p-received').textContent = n(p.received);
+    document.getElementById('p-queue').textContent = n(p.queue_depth);
+    document.getElementById('p-latency').textContent = p.avg_latency_ms.toFixed(0);
+    document.getElementById('p-flagged').textContent = n(p.flagged);
+    document.getElementById('pulse').style.background = '';
+  } catch (e) { document.getElementById('pulse').style.background = 'var(--bad)'; }
+}
+refresh(); setInterval(refresh, 3000);
+</script>{% endblock %}

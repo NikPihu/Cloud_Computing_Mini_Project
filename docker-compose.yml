@@ -1,0 +1,32 @@
+# NetGuard Cloud
+#   local:  docker compose up --build                     -> http://localhost
+#   EC2:    docker compose -f docker-compose.yml -f docker-compose.aws.yml up -d --build
+#           (adds CloudWatch Logs + Metrics, see docs/EC2_DEPLOY.md)
+services:
+  web:
+    build: .
+    image: netguard-web
+    ports:
+      - "${WEB_PORT:-80}:8000"
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-.env}
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-demo123}
+      STREAM_FEED_URL: http://log-streamer:9000/stream
+      CW_METRICS: "off"
+    volumes:
+      - netguard-data:/data
+    depends_on:
+      log-streamer:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Simulated company network sensor: delivers NSL-KDD connection records one by one
+  log-streamer:
+    build: ./streamer
+    image: netguard-log-streamer
+    expose:
+      - "9000"
+    restart: unless-stopped
+
+volumes:
+  netguard-data:

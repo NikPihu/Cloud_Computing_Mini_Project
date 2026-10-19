@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "_macros.html" import dashboard, evaluation_block, chart_scripts %}
+{% block title %}Report: {{ a.name }}{% endblock %}
+{% block content %}
+<div class="card row">
+  <div><h1 style="margin-bottom:4px">Report: {{ a.name }}</h1>
+    <p class="muted" style="margin:0">{{ a.n_records | num }} connections · analysed {{ a.created_at | dt }} in {{ a.seconds }} s · services:
+      {% for k in a.services %}{{ SERVICES[k].name if k in SERVICES else k }}{{ ', ' if not loop.last }}{% endfor %}</p></div>
+  <span class="spacer"></span>
+  <a class="btn ghost sm" href="{{ url_for('export_report', aid=a.id) }}">⬇ Download results (CSV)</a>
+  <a class="btn sm" href="{{ url_for('upload') }}">New analysis</a>
+</div>
+{{ dashboard('d') }}
+{{ evaluation_block('e') }}
+{% if not a.evaluation %}<div class="card"><h2>Evaluation</h2><p class="muted">This file had no <code>label</code> column, so accuracy can't be measured on it.
+  See <a href="{{ url_for('models_page') }}">Model evaluation</a> for the benchmark results.</p></div>{% endif %}
+{% endblock %}
+{% block scripts %}{{ chart_scripts() }}
+<script>
+new Dashboard('d').render({{ a.summary | tojson }});
+renderEvaluation('e', {{ a.evaluation | tojson }}, 'Every connection in the file had a true label, so we compared each verdict with it.');
+</script>{% endblock %}

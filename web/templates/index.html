@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Network security as a service{% endblock %}
+{% block hero %}
+<section class="hero"><div class="hero-inner">
+  <div style="flex:1;min-width:260px">
+    <h1>Detect network intrusions &amp; anomalies from your company's logs</h1>
+    <p>Sign up, pick the detection services you need, and send us your network traffic logs, either as a file or as a live feed.
+      Our machine-learning models check every connection and you get clear dashboards, without running anything yourself.</p>
+    <div class="row">
+      {% if me %}<a class="btn orange" href="{{ url_for('console') }}">Go to my console</a>
+      {% else %}<a class="btn orange" href="{{ url_for('register') }}">Create a free account</a>
+      <a class="btn ghost" href="{{ url_for('login') }}">Try the demo account</a>{% endif %}
+    </div>
+  </div>
+  <div style="font-size:110px;line-height:1">🛡️📡</div>
+</div></section>
+{% endblock %}
+{% block content %}
+<h2>Our services</h2>
+<div class="svc-grid">
+{% for key, s in SERVICES.items() %}{% set m = model_metric(key) %}
+  <div class="svc-box">
+    <div class="ico">{{ s.icon }}</div>
+    <h3 style="margin:0">{{ s.name }}</h3>
+    <p style="margin:0">{{ s.desc }}</p>
+    <div class="stat"><b>{{ m[1] | pct }}</b> {{ m[0] | lower }} on the NSL-KDD test set</div>
+    <a class="btn sm" href="{{ url_for('services') }}">View service</a>
+  </div>
+{% endfor %}
+</div>
+<div class="card" style="margin-top:16px">
+  <h2>How it works</h2>
+  <div class="grid g4">
+    <div><h3>1. Sign up</h3><p class="muted">Create an account in seconds. It's free.</p></div>
+    <div><h3>2. Choose services</h3><p class="muted">Turn on intrusion detection, anomaly detection and/or attack classification.</p></div>
+    <div><h3>3. Send your logs</h3><p class="muted">Upload a log file, or connect a feed that delivers records one by one in real time.</p></div>
+    <div><h3>4. See the results</h3><p class="muted">Dashboards, threat breakdowns and accuracy, updated live.</p></div>
+  </div>
+</div>
+<div class="card">
+  <h2>Proven on a real benchmark</h2>
+  <p class="muted">Tested on {{ card.test_rows | num }} connections from the NSL-KDD test set, which includes
+    {{ card.evaluation.unseen_attacks | num }} connections from attack types the models never saw during training.</p>
+  <div class="kpis">
+    {% set h = card.evaluation.approaches['Combined verdict'] %}
+    <div class="kpi blue"><div class="v">{{ h.accuracy | pct }}</div><div class="l">Accuracy</div></div>
+    <div class="kpi ok"><div class="v">{{ h.recall | pct }}</div><div class="l">Attacks detected</div></div>
+    <div class="kpi bad"><div class="v">{{ h.unseen_caught | pct }}</div><div class="l">New attack types caught</div></div>
+    <div class="kpi warn"><div class="v">{{ h.false_alarm_rate | pct }}</div><div class="l">False alarms</div></div>
+  </div>
+</div>
+{% endblock %}
